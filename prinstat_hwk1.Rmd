@@ -36,11 +36,7 @@ $$
 
 Besides the first and the last age intervals, the difference between the mid point from one age group to the other is 10 years. 
 
-* Lets take a unit increase  in age as 10 years. 
-*  Let $D^N=1$ be a non-covid 19 death $D^N=0$ be alive or died from covid -19
-* Let $D^C=1$ be a covid 19 death $D^C=0$ be alive or died from a non-covid -19 cause
-*  We will also assume  that $D^N$ and $D^C$ are independent (technically this is not true because dying from covid-19 prevents a person from dying from any other cause)
-* Then 
+* Lets take a unit increase  in age as 10 years.  Then 
 $$
 \beta_1^N = \log \text{E}(Y^N|\text{age} = a_i+1) - \log \text{E}(Y^N|\text{age} = a_i)
 $$
@@ -66,8 +62,4 @@ $$
 \beta_0^N = −12.06 ~~ \beta_0^C = −14.15 ~~ \beta_0^N = 0.09836
 $$
 
-### Solution
-
-Let's take for example you have drawn $n$ samples values from a normal distribution with mean $8$. 
-The likelihood is equal to the probability that a particular outcome $x$ is observed when the true value of the parameter is $\theta$ , and hence it is equal to a probability density over the outcome $x$ not over the parameter $\theta$.
 
