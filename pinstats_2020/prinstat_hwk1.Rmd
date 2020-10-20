@@ -62,4 +62,56 @@ $$
 \beta_0^N = −12.06 ~~ \beta_0^C = −14.15 ~~ \beta_0^N = 0.09836
 $$
 
+### Solution 
+We have been told that  $Y^N$ and $Y^C$ follow a Poisson distribution, recall that if a random variable $K$ follows a Poission distribution, it has the follow mass function  
 
+$$
+P_\lambda(K=k) = f(k|\lambda) = \frac{\lambda^{k}e^{-\lambda}}{k!}
+$$
+Let's say we have observed $n$ values from $n$ random variables $K_1,\ldots,K_n$ that are:
+
+* all identically distributed (i.e. they all follow a Poisson distribution with parameter $\lambda_i$, well not exactly identical since their mean $\lambda$s are different) 
+* independent, i.e, $P(K_1,\ldots,K_n) = \prod_i P(K_i)$
+
+The likelihood is then defined as a function of $\mathbf \Lambda = (\lambda_1,\ldots,\lambda_n)$ given the data, i.e.,
+$$
+L(\mathbf \Lambda|K_1=k_1,\ldots,K_n=k_n) = \prod_i P_{\lambda_i}(K_i=k_i) = \prod_if(k_i|\lambda_i) = \prod_i\frac{\lambda_i^{k_i}e^{-\lambda_i}}{k_i!}
+$$
+The log likelihood which is simpler transformation to work with is given by 
+$$
+l(\Lambda|K_1=k_1,\ldots,K_n=k_n) = \log \prod_i P_{\lambda_i}(K_i=k_i)  = \sum_i\log\frac{\lambda_i^{k_i}e^{-\lambda_i}}{k_i!}
+$$
+
+
+$$
+l(\Lambda|K_1=k_1,\ldots,K_n=k_n)  = \sum_i  \big(k_i \log\lambda_i - \lambda_i  - \log k_i!\big)
+$$
+
+
+$$
+l(\Lambda|K_1=k_1,\ldots,K_n=k_n)  = \sum_i k_i \log\lambda_i - \sum_i \lambda_i  - \sum_i \log k_i!
+$$
+
+For the problem at hand we have $\lambda_i^N = \text{E}(Y^N|\text{age}=a_i)$ for non-covid 19 deads and $\lambda_i^C = \text{E}(Y^C|\text{age}=a_i)$ for covid 19 deads.
+And our parameter of interest is  $\gamma$, it is then sufficient to only look at the covid 19 smaple. 
+
+$$
+l(\gamma|Y^C_1=y^C_1,\ldots,Y^C_n=y^C_n)  = \sum_i y^C_i (\beta_0^C+\gamma\beta_1^Na_i) - \sum_i p_ie^{(\beta_0^C+\gamma\beta_1^Na_i)} - \sum_i \log y^C_i!
+$$
+
+The maximum likelihood estimator of $\gamma$ is the value of $\gamma$ that maximises  $l(\gamma|K_1=k_1,\ldots,K_n=k_n)$. Note that any value that maximises the log likelihood  also maximises the likelihood  because the $\log$  function is monotone. 
+
+To find $\gamma$ that maximises $l(.)$, all we need to do is to solve for $\gamma$ in the equation $l^\prime(\gamma) = 0$ 
+
+Now 
+
+$$
+l^\prime(\gamma) = \sum_iy_i^C\beta_i^N - \sum_i p_i\beta_1^Na_ie^{(\beta_0^C+\gamma\beta_1^Na_i)}
+$$
+$$
+\sum_iy_i^C\beta_i^N - \sum_i p_i\beta_1^Na_ie^{(\beta_0^C+\gamma\beta_1^Na_i)}  = 0
+$$
+
+$$
+\sum_i p_i\beta_1^Na_ie^{(\beta_0^C+\gamma\beta_1^Na_i)}  = \sum_iy_i^C\beta_i^N 
+$$
