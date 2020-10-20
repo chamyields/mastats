@@ -1,0 +1,73 @@
+---
+title: "Prinstats homework 1"
+output: html_notebook
+---
+## Questions
+Consider the paper of David Spiegelhalter (available on Ufora). In this paper
+the author examines the age-specific risk of dying (with or from) Covid-19 in
+the UK. Table 2 in the paper, gives for several age categories the numbers
+of reported Covid-19 deaths, numbers of non-covid related deaths, population
+sizes, among other numbers.
+
+
+## 1. Question
+
+Assign to each age interval a numerical value given by the midpoint (e.g. for 0-4, the midpoint is 
+(0+4)/2 =2) and let $p_i$ denote the corresponding
+population size in the UK.
+Assume that the number of non-covid deaths $(Y^N )$ within an age class
+with midpoint $a_i$ $(i = 1,\ldots , 11)$ can be described by a Poisson distribution with mean given by
+
+$$
+\text{E}(Y^N|\text{age}=a_i) = p_i\exp(\beta_0^N+\beta_1^Na_i)
+$$
+
+(the superscript refers to non-covid).
+Also for the covid-related deaths $(Y^C)$ we assume a Poisson distribution
+with
+
+$$
+\text{E}(Y^C|\text{age}=a_i) = p_i\exp(\beta_0^C+\gamma\beta_1^Na_i)
+$$
+
+*How do you interpret the $\gamma$ parameter?*
+
+### Solution
+
+Besides the first and the last age intervals, the difference between the mid point from one age group to the other is 10 years. 
+
+* Lets take a unit increase  in age as 10 years. 
+*  Let $D^N=1$ be a non-covid 19 death $D^N=0$ be alive or died from covid -19
+* Let $D^C=1$ be a covid 19 death $D^C=0$ be alive or died from a non-covid -19 cause
+*  We will also assume  that $D^N$ and $D^C$ are independent (technically this is not true because dying from covid-19 prevents a person from dying from any other cause)
+* Then 
+$$
+\beta_1^N = \log \text{E}(Y^N|\text{age} = a_i+1) - \log \text{E}(Y^N|\text{age} = a_i)
+$$
+and 
+ $$
+\gamma\beta_1^N = \log \text{E}(Y^C|\text{age} = a_i+1) - \log \text{E}(Y^C|\text{age} = a_i)
+$$
+* $\beta_1^N$ is the expected change in the number of non-covid-19 deaths per unit increase in age in the logarithmic scale
+* $\gamma \beta_1^N$ is the expected change in the number of covid-19 deaths per unit increase in age in the logarithmic scale
+    
+* $\gamma = \gamma\beta_1^N/\beta_1^N$ is ratio of the expected change in the number of covid-19 deaths on the expected change in the number of non-covid 19 deaths for a unit increase in age in the logarithmic scale
+* $\gamma>0$ implies for a unit increase in age the expected change in the number of  covid-19 deaths is greater than that of non-covid 19 deaths.  
+* $\gamma<0$ implies for a unit increase in age, the expected change in the number of  covid-19 deaths is less than that of non-covid 19 deaths. 
+* $\gamma = 0$ implies for a unit increase in age, the expected change in the number of  covid-19 deaths is equal to  that of non-covid 19 deaths.  Hence dying from covid 19 compared to dying from a non-covid 19 cause is independent of age.
+
+
+## 2. Question
+
+Given the models from the previous question, and assuming that all num-
+bers of deaths (both covid and non-covid) are independently distributed.  Construct the log-likelihood function and make a graph of the log-likelihood as a function of the $\gamma$ parameter. You may use the following estimates for the other parameters:
+
+$$
+\beta_0^N = −12.06 ~~ \beta_0^C = −14.15 ~~ \beta_0^N = 0.09836
+$$
+
+### Solution
+
+Let's take for example you have drawn $n$ samples values from a normal distribution with mean $8$. 
+The likelihood is equal to the probability that a particular outcome $x$ is observed when the true value of the parameter is $\theta$ , and hence it is equal to a probability density over the outcome $x$ not over the parameter $\theta$.
+
