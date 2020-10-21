@@ -101,18 +101,18 @@ For the problem at hand we have:
 * samples size  $n_C=11$ for the non-covid-19 deads
 
 $$
-l(\gamma|Y^C_1=y^C_1,\ldots,Y^C_n=y^C_n,Y^N_1=y^N_1,\ldots,Y^N_n=y^N_n)  = \log \Pi_if(y_i^C|\lambda_i^C(\gamma))f(y_i^N|\lambda_i^N)
+l(\gamma|Y^C_1=Y^C_1,\ldots,Y^C_n=Y^C_n,Y^N_1=y^N_1,\ldots,Y^N_n=y^N_n)  = \log \Pi_if(Y^C|\lambda_i^C(\gamma))f(y_i^N|\lambda_i^N)
 $$
 $$
-l(\gamma|Y^C_1=y^C_1,\ldots,Y^C_n=y^C_n,Y^N_1=y^N_1,\ldots,Y^N_n=y^N_n)  = \sum_{i=1}^{11}\log f(y_i^C|\lambda_i^C(\gamma))+\sum_{i=1}^{11}\log f(y_i^N|\lambda_i^N)
+l(\gamma|Y^C_1=Y^C_1,\ldots,Y^C_n=Y^C_n,Y^N_1=y^N_1,\ldots,Y^N_n=y^N_n)  = \sum_{i=1}^{11}\log f(Y^C|\lambda_i^C(\gamma))+\sum_{i=1}^{11}\log f(y_i^N|\lambda_i^N)
 $$
 $$
-l(\gamma|Y^C_1=y^C_1,\ldots,Y^C_n=y^C_n,Y^N_1=y^N_1,\ldots,Y^N_n=y^N_n)  = \sum_{i=1}^{11}\big(y_i^C\log \lambda_i^C(\gamma) + y_i^N\log \lambda_i^N\big) -\sum_{i=1}^{11}\big(\lambda_i^C(\gamma)+\lambda_i^N\big)-\sum_{i=1}^{11}\log (y_i^Cy_i^N)
+l(\gamma|Y^C_1=Y^C_1,\ldots,Y^C_n=Y^C_n,Y^N_1=y^N_1,\ldots,Y^N_n=y^N_n)  = \sum_{i=1}^{11}\big(Y^C\log \lambda_i^C(\gamma) + y_i^N\log \lambda_i^N\big) -\sum_{i=1}^{11}\big(\lambda_i^C(\gamma)+\lambda_i^N\big)-\sum_{i=1}^{11}\log (Y^Cy_i^N)
 $$
 We can simply write our log likelihood function as 
 
 $$
-l(\gamma)  = \sum_{i=1}^{11}\big(y_i^C\log \lambda_i^C(\gamma) + y_i^N\log \lambda_i^N\big) -\sum_{i=1}^{11}\big(\lambda_i^C(\gamma)+\lambda_i^N\big)-\sum_{i=1}^{11}\log (y_i^Cy_i^N)
+l(\gamma)  = \sum_{i=1}^{11}\big(Y^C\log \lambda_i^C(\gamma) + y_i^N\log \lambda_i^N\big) -\sum_{i=1}^{11}\big(\lambda_i^C(\gamma)+\lambda_i^N\big)-\sum_{i=1}^{11}\log (Y^Cy_i^N)
 $$
 So we have our log likelihood function lets code it in `R`. 
 
@@ -183,22 +183,63 @@ abline(v=gammas[-log_ls==max(-log_ls)])
 ```{r}
 paste0('optimal gamma: ',round(gammas[-log_ls == max(-log_ls)],3))
 ```
+## 3.Question 
+Use the optim (or similar) function in R for finding the maxi-
+mum likelihood estimate of $\gamma$.
 
+### Solution 
 Lets look for $\gamma$ with `optim`
 
 ```{r}
 # initial value of gamma
-par = 1
+par = 0
 
-optim(par=par,
-      fn= log_l,
-      method='Brent',
-      lower = 1,
-      upper = 2)
+opt = optim(par=par,
+      fn= log_l)
 
+opt
 ```
-Can you compare the results of the manual computation with that of `optim`
+
+Can you compare the results of the manual computation with that of `optim`. They seem to be different? Please check if there are any mistakes in my computations 
+```{r}
+plot(x=gammas,y=-log_ls,type="l")
+abline(v=gammas[-log_ls==max(-log_ls)],col='blue')
+abline(v=opt$par,col='red')
+```
+
 
 * Note that our `log_l` function returns the `negative` log likelihood instead because `optim` is a minimisation function. 
 
-## 3. Question
+* I checked the paper for the maximum likelihood estimator of $\gamma$, they also have $(1.128)$, the value from the `optim` function. So emm.... let's check the `optimise` function ;)
+```{r}
+optimize(log_l,c(-2,2))
+```
+
+## 4. Question
+
+with the information in Table 2 and with the models and their
+parameter estimates of the previous questions, estimate the following two
+probabilities:
+$$
+\text{P} (\text{Age} = 19.5 | \text{ died of covid}) \text{ and } \text{P} (\text{Age} = 79.5 | \text{ died of covid})
+$$
+
+### Solution 
+Bayes theorem: for two random variables $X$ and $Y$,
+$$
+P(X|Y) = \frac{P(Y|X)P(X)}{P(Y)}
+$$
+
+Hence 
+
+$$
+\text{P} (\text{Age} = 19.5 | \text{ died of covid})  = \frac{\text{P} ( \text{ died of covid} | \text{Age} = 19.5 ) \text{P} (\text{Age} = 19.5)}{\text{P}( \text{ died of covid})}
+$$
+
+* further 
+
+$$
+\text{P} ( \text{ died of covid} | \text{Age} = 19.5 ) = \frac{\text{E}(Y^C|\text{Age} = 19.5)}{\text{population size at age 19.5}}
+$$
+
+Fill the values and compute this probability, do the same for $\text{P} (\text{Age} = 79.5 | \text{ died of covid})$
