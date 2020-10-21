@@ -92,26 +92,113 @@ $$
 l(\Lambda|K_1=k_1,\ldots,K_n=k_n)  = \sum_i k_i \log\lambda_i - \sum_i \lambda_i  - \sum_i \log k_i!
 $$
 
-For the problem at hand we have $\lambda_i^N = \text{E}(Y^N|\text{age}=a_i)$ for non-covid 19 deads and $\lambda_i^C = \text{E}(Y^C|\text{age}=a_i)$ for covid 19 deads.
-And our parameter of interest is  $\gamma$, it is then sufficient to only look at the covid 19 smaple. 
+For the problem at hand we have:
+
+* $\lambda_i^N = \text{E}(Y^N|\text{age}=a_i)$ for non-covid 19 deads
+* $\lambda_i^C (\gamma) = \text{E}(Y^C|\text{age}=a_i)$ for covid 19 deads
+* our parameter of interest is  $\gamma$. 
+* samples size  $n_N=11$ for the covid-19 deads 
+* samples size  $n_C=11$ for the non-covid-19 deads
 
 $$
-l(\gamma|Y^C_1=y^C_1,\ldots,Y^C_n=y^C_n)  = \sum_i y^C_i (\beta_0^C+\gamma\beta_1^Na_i) - \sum_i p_ie^{(\beta_0^C+\gamma\beta_1^Na_i)} - \sum_i \log y^C_i!
-$$
-
-The maximum likelihood estimator of $\gamma$ is the value of $\gamma$ that maximises  $l(\gamma|K_1=k_1,\ldots,K_n=k_n)$. Note that any value that maximises the log likelihood  also maximises the likelihood  because the $\log$  function is monotone. 
-
-To find $\gamma$ that maximises $l(.)$, all we need to do is to solve for $\gamma$ in the equation $l^\prime(\gamma) = 0$ 
-
-Now 
-
-$$
-l^\prime(\gamma) = \sum_iy_i^C\beta_i^N - \sum_i p_i\beta_1^Na_ie^{(\beta_0^C+\gamma\beta_1^Na_i)}
+l(\gamma|Y^C_1=y^C_1,\ldots,Y^C_n=y^C_n,Y^N_1=y^N_1,\ldots,Y^N_n=y^N_n)  = \log \Pi_if(y_i^C|\lambda_i^C(\gamma))f(y_i^N|\lambda_i^N)
 $$
 $$
-\sum_iy_i^C\beta_i^N - \sum_i p_i\beta_1^Na_ie^{(\beta_0^C+\gamma\beta_1^Na_i)}  = 0
+l(\gamma|Y^C_1=y^C_1,\ldots,Y^C_n=y^C_n,Y^N_1=y^N_1,\ldots,Y^N_n=y^N_n)  = \sum_{i=1}^{11}\log f(y_i^C|\lambda_i^C(\gamma))+\sum_{i=1}^{11}\log f(y_i^N|\lambda_i^N)
 $$
+$$
+l(\gamma|Y^C_1=y^C_1,\ldots,Y^C_n=y^C_n,Y^N_1=y^N_1,\ldots,Y^N_n=y^N_n)  = \sum_{i=1}^{11}\big(y_i^C\log \lambda_i^C(\gamma) + y_i^N\log \lambda_i^N\big) -\sum_{i=1}^{11}\big(\lambda_i^C(\gamma)+\lambda_i^N\big)-\sum_{i=1}^{11}\log (y_i^Cy_i^N)
+$$
+We can simply write our log likelihood function as 
 
 $$
-\sum_i p_i\beta_1^Na_ie^{(\beta_0^C+\gamma\beta_1^Na_i)}  = \sum_iy_i^C\beta_i^N 
+l(\gamma)  = \sum_{i=1}^{11}\big(y_i^C\log \lambda_i^C(\gamma) + y_i^N\log \lambda_i^N\big) -\sum_{i=1}^{11}\big(\lambda_i^C(\gamma)+\lambda_i^N\big)-\sum_{i=1}^{11}\log (y_i^Cy_i^N)
 $$
+So we have our log likelihood function lets code it in `R`. 
+
+
+
+```{r}
+library(dplyr)
+library(tidyverse)
+
+age_mid_point = function(x,y){
+  (x+y)/2
+}
+x = c(0,5,15,25,35,45,55,65,75,85)
+y = c(4,14,24,34,44,54,64,74,84,89)
+
+age = c(age_mid_point(x,y),90)
+
+number_covid_19 = c(3,3,33,128,369,1283,3476,7319,16043,10160,10790)
+population = c(3535430,7159102,6988755,
+               7998302,7460856,8142528,
+               7019590,5906928,3476922,
+               918437,528959)
+number_non_covid_19 = c(848,138,470,1141,2577,6577,13565,27184,47729,30703,30703)
+
+data = data.frame(age,number_covid_19,number_non_covid_19,population)
+
+
+beta_0_C_hat = -14.15
+beta_1_N_hat = 0.09836
+beta_0_N_hat = -12.06
+
+
+
+beta_0_C = beta_0_C_hat
+beta_0_N = beta_0_N_hat
+beta_1_N = beta_1_N_hat
+
+
+log_l = function(gamma_hat){
+
+  lambda_N = data$population*exp(beta_0_N+beta_1_N*data$age)
+  lambda_C = data$population*exp(beta_0_C+gamma_hat*beta_1_N*data$age)
+  
+  sum_1 = data$number_covid_19*log(lambda_C) +data$number_non_covid_19*log(lambda_N)
+  sum_2 = lambda_C+lambda_N
+  sum_3 = log(data$number_covid_19*data$number_non_covid_19)
+  
+  sum_all= sum(sum_1-sum_2-sum_3)
+  return(-sum_all)
+}
+data
+```
+
+```{r}
+log_ls = c()
+gammas = seq(1,1.2,length.out = 1000)
+for(i in gammas){
+  log_ls  = c(log_l(i),log_ls)
+}
+
+log_ls = log_ls/max(abs(log_ls))
+
+plot(x=gammas,y=-log_ls,type="l")
+abline(v=gammas[-log_ls==max(-log_ls)])
+```
+
+
+```{r}
+paste0('optimal gamma: ',round(gammas[-log_ls == max(-log_ls)],3))
+```
+
+Lets look for $\gamma$ with `optim`
+
+```{r}
+# initial value of gamma
+par = 1
+
+optim(par=par,
+      fn= log_l,
+      method='Brent',
+      lower = 1,
+      upper = 2)
+
+```
+Can you compare the results of the manual computation with that of `optim`
+
+* Note that our `log_l` function returns the `negative` log likelihood instead because `optim` is a minimisation function. 
+
+## 3. Question
