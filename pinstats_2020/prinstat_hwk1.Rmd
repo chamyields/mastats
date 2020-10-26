@@ -59,7 +59,7 @@ Given the models from the previous question, and assuming that all num-
 bers of deaths (both covid and non-covid) are independently distributed.  Construct the log-likelihood function and make a graph of the log-likelihood as a function of the $\gamma$ parameter. You may use the following estimates for the other parameters:
 
 $$
-\beta_0^N = −12.06 ~~ \beta_0^C = −14.15 ~~ \beta_0^N = 0.09836
+\beta_0^N = −12.06 ~~ \beta_0^C = −14.15 ~~ \beta_1^N = 0.09836
 $$
 
 ### Solution 
@@ -112,38 +112,40 @@ $$
 We can simply write our log likelihood function as 
 
 $$
-l(\gamma)  = \sum_{i=1}^{11}\big(Y^C\log \lambda_i^C(\gamma) + y_i^N\log \lambda_i^N\big) -\sum_{i=1}^{11}\big(\lambda_i^C(\gamma)+\lambda_i^N\big)-\sum_{i=1}^{11}\log (Y^Cy_i^N)
+l(\gamma)  = \sum_{i=1}^{11}\big(Y^C\log \lambda_i^C(\gamma) + y_i^N\log \lambda_i^N\big) -\sum_{i=1}^{11}\big(\lambda_i^C(\gamma)+\lambda_i^N\big)-\sum_{i=1}^{11}\log (Y^CY^N)
 $$
 So we have our log likelihood function lets code it in `R`. 
 
 
-
 ```{r}
-library(dplyr)
-library(tidyverse)
+library(dplyr,
+        verbose=FALSE)
+library(tidyverse,
+        verbose = FALSE)
 
 age_mid_point = function(x,y){
   (x+y)/2
 }
-x = c(0,5,15,25,35,45,55,65,75,85)
-y = c(4,14,24,34,44,54,64,74,84,89)
-
-age = c(age_mid_point(x,y),90)
-
-number_covid_19 = c(3,3,33,128,369,1283,3476,7319,16043,10160,10790)
-population = c(3535430,7159102,6988755,
-               7998302,7460856,8142528,
-               7019590,5906928,3476922,
-               918437,528959)
-number_non_covid_19 = c(848,138,470,1141,2577,6577,13565,27184,47729,30703,30703)
-
-data = data.frame(age,number_covid_19,number_non_covid_19,population)
-
 
 beta_0_C_hat = -14.15
 beta_1_N_hat = 0.09836
 beta_0_N_hat = -12.06
 
+lb = c(0,5,15,25,35,45,55,65,75,85)
+ub = c(4,14,24,34,44,54,64,74,84,89)
+
+age = c(age_mid_point(lb,ub),90)
+
+Y_C = c(3,3,33,128,369,1283,3476,7319,16043,10160,10790)
+
+population = c(3535430,7159102,6988755,
+               7998302,7460856,8142528,
+               7019590,5906928,3476922,
+               918437,528959)
+
+Y_N = c(848,138,470,1141,2577,6577,13565,27184,47729,30703,30703)
+
+data = data.frame(age,Y_N,Y_C,population)
 
 
 beta_0_C = beta_0_C_hat
@@ -156,9 +158,9 @@ log_l = function(gamma_hat){
   lambda_N = data$population*exp(beta_0_N+beta_1_N*data$age)
   lambda_C = data$population*exp(beta_0_C+gamma_hat*beta_1_N*data$age)
   
-  sum_1 = data$number_covid_19*log(lambda_C) +data$number_non_covid_19*log(lambda_N)
+  sum_1 = data$Y_C*log(lambda_C)+data$Y_N*log(lambda_N)
   sum_2 = lambda_C+lambda_N
-  sum_3 = log(data$number_covid_19*data$number_non_covid_19)
+  sum_3 = log(data$Y_C*data$Y_N)
   
   sum_all= sum(sum_1-sum_2-sum_3)
   return(-sum_all)
@@ -169,8 +171,8 @@ data
 ```{r}
 log_ls = c()
 gammas = seq(1,1.2,length.out = 1000)
-for(i in gammas){
-  log_ls  = c(log_l(i),log_ls)
+for(gamma in gammas){
+  log_ls  = c(log_l(gamma),log_ls)
 }
 
 log_ls = log_ls/max(abs(log_ls))
@@ -243,3 +245,148 @@ $$
 $$
 
 Fill the values and compute this probability, do the same for $\text{P} (\text{Age} = 79.5 | \text{ died of covid})$
+
+## Question 5. 
+For this question you may assume that the numerical values for (the estimates) $\beta_0^C$, $\beta^N_0$ and $\beta_1^N$ that were given in question 2, are the true population parameter values.Set up a simulation study in which you simulate data (as in Table 2) for the covid and non-covid related deaths, and calculate the
+maximum likelihood estimate of $\gamma$ for each simulated dataset.
+
+
+* Plot a histogram of the estimates of $\gamma$. How do you interpret this
+histogram?
+* Assess whether the estimates agree with a normal distribution.
+
+### Solution 
+
+```{r warning=FALSE}
+n=11
+gamma_hat = 1.2
+
+lambda_N = data$population*exp(beta_0_N+beta_1_N*data$age)
+lambda_C = data$population*exp(beta_0_C+gamma_hat*beta_1_N*data$age)
+
+max_lik_est = c()
+num_simulations = 1000
+
+for(k in 1:num_simulations){
+  
+  # set.seed(k)
+  
+  Y_C = rpois(n,lambda_C)
+  Y_N = rpois(n,lambda_N)
+  data = data.frame(age,Y_N,Y_C,population)
+  
+  par = 1
+  
+  opt = optimize(log_l,c(-1.5,1.5));
+  
+  max_lik_est[k] = opt$minimum
+}
+m<-mean(max_lik_est)
+std<-sqrt(var(max_lik_est))
+
+hist(max_lik_est, 
+     col = 'skyblue3',
+     breaks = 20,
+     prob=TRUE)
+curve(dnorm(x, mean=m, sd=std), 
+      col="red", 
+      lwd=3, 
+      add=TRUE, 
+      yaxt="n")
+
+print('')
+```
+Assessing normality
+```{r}
+qqnorm(max_lik_est, pch = 1, frame = FALSE)
+qqline(max_lik_est, col = "steelblue", lwd = 2)
+```
+Ok it seems like there are two sets of maximum likelihood estimates:One that occurs at the upper bound of the interval of possible $\gamma$ values and the others. The upper bound of the interval is taken as the maximum likelihood estimate only when it can not be computed. 
+We will take the upper bound values out of the distribution and reassess. 
+```{r}
+### taking out max_lik that are greater 1.4
+sub_max_lik = max_lik_est[max_lik_est<1.4]
+
+m<-mean(sub_max_lik)
+std<-sqrt(var(sub_max_lik))
+
+hist(sub_max_lik, 
+     col= 'skyblue3',
+     breaks = 20,
+     prob=TRUE)
+
+curve(dnorm(x, mean=m, sd=std), 
+      col="red", lwd=3, add=TRUE, yaxt="n")
+abline(v=mean(sub_max_lik),col="pink",lwd=3)
+abline(v=gamma_hat,col="green",lwd=3)
+```
+
+```{r}
+qqnorm(sub_max_lik, pch = 1, frame = FALSE)
+qqline(sub_max_lik, col = "steelblue", lwd = 2)
+```
+
+Now the distribution of mles (maximum likelihood estimates) seem to be normal.
+
+## Question 6
+For this question you may again assume that the numerical values for $\beta_0^C$, $\beta^N_0$ and $\beta_1^N$ 
+that were given in question 2, are the true population
+parameter values. We now consider the log-likelihood function of question 2 as a function of $\gamma$, say $l(\gamma)$.
+In likelihood theory there is a result that says that in large samples, the
+following approximately holds:
+
+$$
+2(l(\hat \gamma) − l(\gamma)) \stackrel{d}{=}\chi_1^2
+$$
+
+Upon using this result, construct a 95\% confidence interval for
+the parameter $\gamma$ and report this interval for the data from Table 2 (i.e. for
+the fitted model from question 3). How do you interpret this result and
+what is your final conclusion of your data analysis?
+
+### Solution
+Note that $2(l(\hat \gamma) − l(\gamma)) \stackrel{d}{=}\chi_1^2$ gives rise to the well known likelihood-ratio (LR) test.
+
+In the LR test of the null hypothesis
+$$
+H_0:\gamma = \gamma_0
+$$
+versus the two-sided alternative
+$$
+H_1:\gamma \neq \gamma_0
+$$
+we would reject $H_0$ at the $\alpha$-level if the LR statistic exceeds the $100(1-\alpha/2)$th or is below $\alpha/2$  percentile  of the $\chi_1^2$  distribution. These values for $\alpha=0.05$-level are:
+```{r}
+alpha = 0.05
+lb = alpha/2
+ub = 1-(alpha/2)
+# quantiles
+qchisq(c(lb,ub),1)
+```
+For our problem at  with $\hat \gamma = 1.28$ and let $\gamma_0 = 0$
+```{r}
+# Note that the log_l function returns the negative log_l and the test statistics (LR)
+# here is 
+-2*(log_l(1.28)-log_l(0))
+```
+
+This value is is above the upper bound and hence $\hat \gamma  = 1.28$ is significantly non-zero.
+
+We can construct the $\alpha$ confidence interval as 
+$$
+\chi_{1,(\alpha/2)}^2\leq2(l(\hat \gamma) − l(\gamma)) \leq \chi_{1,(1-\alpha/2)}^2
+$$
+
+
+or 
+$$
+\frac{\chi_{1,(\alpha/2)}^2}{2}\leq (l(\hat \gamma) − l(\gamma)) \leq \frac{\chi_{1,(1-\alpha/2)}^2}{2}
+$$
+
+which 
+```{r}
+qchisq(c(lb,ub),1)/2
+```
+
+Intepret this interval please! 
+
