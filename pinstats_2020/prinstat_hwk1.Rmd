@@ -2,6 +2,10 @@
 title: "Prinstats homework 1"
 output: html_notebook
 ---
+Here is the link to get the code from github 
+https://github.com/chamyields/mastats/tree/main/pinstats_2020
+
+
 ## Questions
 Consider the paper of David Spiegelhalter (available on Ufora). In this paper
 the author examines the age-specific risk of dying (with or from) Covid-19 in
@@ -238,11 +242,19 @@ $$
 \text{P} (\text{Age} = 19.5 | \text{ died of covid})  = \frac{\text{P} ( \text{ died of covid} | \text{Age} = 19.5 ) \text{P} (\text{Age} = 19.5)}{\text{P}( \text{ died of covid})}
 $$
 
-* further 
+* further, use these values and plug into the formula above.
 
 $$
-\text{P} ( \text{ died of covid} | \text{Age} = 19.5 ) = \frac{\text{E}(Y^C|\text{Age} = 19.5)}{\text{population size at age 19.5}}
+\text{P} ( \text{ died of covid} | \text{Age} = 19.5 ) = \frac{\text{E}(Y^C|\text{Age} = 19.5)}{\text{population size with mid point at age 19.5}}
 $$
+$$
+ \text{P} (\text{Age} = 19.5) = \frac{\text{Population size with mid point at 19.5}}{\text{Total population size across all age groups}}
+$$
+
+$$
+ \text{P} (\text{ died of covid}) = \frac{\text{Total number of people who died from covid across all age groups}}{\text{Total population size across all age groups}}
+$$
+
 
 Fill the values and compute this probability, do the same for $\text{P} (\text{Age} = 79.5 | \text{ died of covid})$
 
